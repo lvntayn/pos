@@ -1,6 +1,6 @@
 <?php
 
-namespace Mews\Pos;
+namespace Mews\Pos; 
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
