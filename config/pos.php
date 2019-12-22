@@ -48,7 +48,7 @@ return [
                     'production'    => 'https://sanalpos.isbank.com.tr/fim/est3Dgate',
                     'test'          => 'https://entegrasyon.asseco-see.com.tr/fim/est3Dgate',
                 ],
-            ]
+            ] 
         ],
         'yapikredi' => [
             'name'  => 'Yapıkredi',
@@ -71,6 +71,42 @@ return [
                 'gateway'       => [
                     'production'    => 'https://sanalposprov.garanti.com.tr/servlet/gt3dengine',
                     'test'          => 'https://sanalposprovtest.garanti.com.tr/servlet/gt3dengine',
+                ],
+            ]
+        ],
+        'halkbank' => [
+            'name'  => 'Halkbank',
+            'class' => \Mews\Pos\EstPos::class,
+            'urls'  => [
+                'production'    => 'https://sanalpos.halkbank.com.tr/fim/api',
+                'test'          => 'https://entegrasyon.asseco-see.com.tr/fim/api',
+                'gateway'       => [
+                    'production'    => 'https://sanalpos.halkbank.com.tr/fim/est3Dgate',
+                    'test'          => 'https://entegrasyon.asseco-see.com.tr/fim/est3Dgate',
+                ],
+            ]
+        ],
+        'teb' => [ 
+            'name'  => 'TEB',
+            'class' => \Mews\Pos\EstPos::class,
+            'urls'  => [
+                'production'    => 'https://sanalpos.teb.com.tr/fim/api',
+                'test'          => 'https://entegrasyon.asseco-see.com.tr/fim/api',
+                'gateway'       => [
+                    'production'    => 'https://sanalpos.teb.com.tr/fim/est3Dgate',
+                    'test'          => 'https://entegrasyon.asseco-see.com.tr/fim/est3Dgate',
+                ],
+            ]
+        ],
+        'finansbank' => [
+            'name'  => 'Finansbank',
+            'class' => \Mews\Pos\EstPos::class,
+            'urls'  => [
+                'production'    => 'https://www.fbwebpos.com/fim/api',
+                'test'          => 'https://entegrasyon.asseco-see.com.tr/fim/api',
+                'gateway'       => [
+                    'production'    => 'https://www.fbwebpos.com/fim/est3Dgate',
+                    'test'          => 'https://entegrasyon.asseco-see.com.tr/fim/est3Dgate',
                 ],
             ]
         ],
