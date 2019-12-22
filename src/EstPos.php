@@ -1,6 +1,6 @@
 <?php
 
-namespace Mews\Pos;
+namespace Mews\Pos; 
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
@@ -517,7 +517,6 @@ class EstPos implements PosInterface
         if ($this->order) {
             $this->order->hash = $this->create3DHash();
 
-            var_dump($this->card);
             $card_type = null;
             if (isset($this->card->type)) {
                 if ($this->card->type == 'visa') {
