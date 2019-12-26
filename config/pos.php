@@ -54,10 +54,10 @@ return [
             'name'  => 'Yapıkredi',
             'class' => \Mews\Pos\PosNet::class,
             'urls'  => [
-                'production'    => 'https://posnet.yapikredi.com.tr/PosnetWebService/XML',
+                'production'    => 'https://www.posnet.ykb.com/PosnetWebService/XML',
                 'test'          => 'https://setmpos.ykb.com/PosnetWebService/XML',
                 'gateway'       => [
-                    'production'    => 'https://posnet.ykb.com/3DSWebService/YKBPaymentService',
+                    'production'    => 'https://www.posnet.ykb.com/3DSWebService/YKBPaymentService',
                     'test'          => 'https://setmpos.ykb.com/3DSWebService/YKBPaymentService',
                 ],
             ]
