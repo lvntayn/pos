@@ -595,6 +595,9 @@ class PosNet implements PosInterface
 
         if ($this->card && $this->order) {
             $data = $this->getOosTransactionData();
+            if ($data->approved == 0){
+                return $data->respText;
+            }
 
             $inputs = [
                 'posnetData'         => $data->oosRequestDataResponse->data1,
