@@ -162,12 +162,14 @@ class PosNet implements PosInterface
      */
     public function __construct($config, $account, array $currencies)
     {
+    
         $request = Request::createFromGlobals();
         $this->request = $request->request;
-
+       
         $this->crypt = function_exists('mcrypt_encrypt') ?
             new PosNetCrypt :
             null;
+         
 
         $this->config = $config;
         $this->account = $account;
@@ -180,6 +182,8 @@ class PosNet implements PosInterface
         $this->gateway = isset($this->config['urls']['gateway'][$this->account->env]) ?
             $this->config['urls']['gateway'][$this->account->env] :
             $this->config['urls']['gateway']['production'];
+
+        
 
         return $this;
     }
@@ -288,12 +292,27 @@ class PosNet implements PosInterface
         return $this->createXML($nodes);
     }
 
+    public function hashString($originalString){
+        return base64_encode(hash('sha256',($originalString),true));
+    } 
+
+    public function getMacData(){
+        //var_dump($this->account->store_key . ";" . $this->account->terminal_id);
+        $firstHash =  $this->hashString($this->account->store_key . ";" . $this->account->terminal_id);
+        //var_dump($this->getOrderId(20) . ";" . $this->getAmount() . ";" . $this->getCurrency() . ";" . $this->account->client_id . ";" . $firstHash);
+
+        $MAC = $this->hashString($this->getOrderId(20) . ";" . $this->getAmount() . ";" . $this->getCurrency() . ";" . $this->account->client_id . ";" . $firstHash);
+        return str_replace('+', '%2B', utf8_encode($MAC));
+    }
+ 
     /**
      * Create 3D Payment XML
      * @return string
      */
     protected function create3DPaymentXML()
     {
+
+       
         $nodes = [
             'posnetRequest' => [
                 'mid'   => $this->account->client_id,
@@ -302,9 +321,11 @@ class PosNet implements PosInterface
                     'bankData'      => $this->request->get('BankPacket'),
                     'merchantData'  => $this->request->get('MerchantPacket'),
                     'sign'          => $this->request->get('Sign'),
+                    'mac'           => $this->getMacData(),
                 ],
             ]
         ];
+        //print_r($nodes);
 
         return $this->createXML($nodes, 'ISO-8859-9');
     }
@@ -375,6 +396,7 @@ class PosNet implements PosInterface
                 ]
             ],
         ]);
+
 
         $this->send($contents);
 
@@ -463,27 +485,24 @@ class PosNet implements PosInterface
         if ($this->crypt instanceof PosNetCrypt) {
             $decrypted_data = $this->crypt->decrypt($this->request->get('MerchantPacket'), $this->account->store_key);
             $this->crypt->deInit();
-
             $decrypted_data_array = explode(';', $decrypted_data);
-
             $original_data = array_map('strval', [
                 $this->account->client_id,
                 $this->account->terminal_id,
                 $this->getAmount(),
                 $this->getInstallment(),
                 $this->getOrderId(20),
-                $this->getHostName($this->url),
+             //   $this->getHostName($this->url),
             ]);
-
             $decrypted_data_list = array_map('strval', [
                 $decrypted_data_array[0],
                 $decrypted_data_array[1],
                 $decrypted_data_array[2],
                 $decrypted_data_array[3],
                 $decrypted_data_array[4],
-                $this->getHostName($decrypted_data_array[7]),
-            ]);
-
+               // $this->getHostName($decrypted_data_array[7]),
+            ]); 
+            
             if ($original_data == $decrypted_data_list) {
                 $check = true;
             }
@@ -502,15 +521,19 @@ class PosNet implements PosInterface
      */
     public function make3DPayment()
     {
+      
         $status = 'declined';
         $transaction_security = 'MPI fallback';
+
 
         if ($this->check3DHash()) {
             $contents = $this->create3DPaymentXML();
             $this->send($contents);
         }
-
-        if ($this->getProcReturnCode() == '00') {
+       
+        //print_r($this->data);
+       
+        if ($this->getProcReturnCode() == '00' && !empty($this->data->oosResolveMerchantDataResponse)) {
             if ($this->data->oosResolveMerchantDataResponse->mdStatus == '1') {
                 $transaction_security = 'Full 3D Secure';
                 $status = 'approved';
@@ -528,14 +551,20 @@ class PosNet implements PosInterface
                         'merchantData'  => $this->request->get('MerchantPacket'),
                         'sign'          => $this->request->get('Sign'),
                         'wpAmount'      => $this->data->oosResolveMerchantDataResponse->amount,
+                        'mac'           => $this->getMacData(),
                     ],
                 ]
             ];
+            
 
+           
             $contents = $this->createXML($nodes, $encoding = 'ISO-8859-9');
             $this->send($contents);
         }
 
+        //print_r($this->data);
+
+   
         $this->response = (object) $this->data;
 
         $this->response = (object) [
@@ -567,6 +596,12 @@ class PosNet implements PosInterface
             'all'                   => $this->data,
         ];
 
+        if (empty($this->response->md_error_message)){
+            if (!empty($this->response->all->respText)){
+                $this->response->md_error_message = $this->response->all->respText.' '.$this->response->all->respCode.' '.$this->getOrderId(20);
+            }
+        }
+
         return $this;
     }
 
@@ -595,6 +630,7 @@ class PosNet implements PosInterface
 
         if ($this->card && $this->order) {
             $data = $this->getOosTransactionData();
+
             if ($data->approved == 0){
                 return $data->respText;
             }
